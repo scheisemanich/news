@@ -285,8 +285,8 @@ def update_news_playlist(json_file, credentials_file, playlist_id=None, playlist
 # Example usage with command-line interface
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="YouTube Playlist Creator")
-    parser.add_argument("--json-file", help="Path to the JSON file with videos")
-    parser.add_argument("--credentials", help="Path to the OAuth 2.0 client credentials file")
+    parser.add_argument("--json-file", default="./output/latest_news.json", help="Path to the JSON file with videos")
+    parser.add_argument("--credentials", default="./config/client_secret.json", help="Path to the OAuth 2.0 client credentials file")
     parser.add_argument("--playlist-id", help="Existing playlist ID to update")
     parser.add_argument("--title", help="Title for a new playlist")
     parser.add_argument("--description", help="Description for a new playlist")
@@ -302,4 +302,4 @@ if __name__ == "__main__":
         playlist_title=args.title,
         playlist_description=args.description,
         privacy_status=args.privacy
-    ) 
+    )
