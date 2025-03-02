@@ -2,17 +2,15 @@ name: Update YouTube News Playlist
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Stündlich ausführen
-  workflow_dispatch:     # Ermöglicht manuelle Ausführung
+    - cron: '0 * * * *'  # Run hourly
+  workflow_dispatch:     # Allow manual execution
 
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Make scripts executable
-        run: chmod +x scripts/*.sh
-        
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -23,14 +21,17 @@ jobs:
           python -m pip install --upgrade pip
           pip install google-api-python-client google-auth google-auth-oauthlib google-auth-httplib2 schedule
           
+      - name: Make scripts executable
+        run: chmod +x scripts/*.sh scripts/*.py
+          
       - name: Prepare configuration files
         run: |
-          mkdir -p config output
+          mkdir -p config output logs
           echo '${{ secrets.CLIENT_SECRET }}' > config/client_secret.json
           echo '${{ secrets.TOKEN_JSON }}' > config/token.json
-          echo "PLU5k83uIBp8F_cNiVLLC_Zqx48grLZnBm" > config/playlist_id.txt
+          echo '${{ secrets.PLAYLIST_ID }}' > config/playlist_id.txt
           
-          # Erstelle config.json
+          # Create config.json
           cat > config/config.json << EOL
           {
             "api_key": "${{ secrets.YOUTUBE_API_KEY }}",
@@ -44,7 +45,14 @@ jobs:
           EOL
           
       - name: Run news aggregator
-        run: python scripts/youtube_news_aggregator.py --load-config config/config.json --days-back 2 --now
+        run: python scripts/youtube_news_aggregator.py --load-config config/config.json --days-back 2 --output-dir ./output --now
           
       - name: Update playlist
-        run: python scripts/youtube_playlist_creator.py --json-file output/latest_news.json --credentials config/client_secret.json --playlist-id $(cat config/playlist_id.txt)
+        run: python scripts/youtube_playlist_creator.py --json-file output/latest_news.json --credentials config/client_secret.json --playlist-id $(cat config/playlist_id.txt) --title "Daily News (GitHub Action)"
+        
+      - name: Save logs
+        if: always()
+        run: |
+          mkdir -p logs
+          echo "Update completed at $(date)" > logs/github_action_log.txt
+          echo "Videos in playlist: $(grep -o '\"id\":' output/latest_news.json | wc -l)" >> logs/github_action_log.txt
