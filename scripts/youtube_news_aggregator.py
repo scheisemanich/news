@@ -1,6 +1,9 @@
 import os
 import json
 import datetime
+import argparse
+import time
+import schedule
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
@@ -258,13 +261,15 @@ class YouTubeNewsAggregator:
         print(f"Exported {len(videos)} videos to {filename}")
 
 
-import argparse
-import time
-import schedule
-
-def update_news_feed(api_key, channels, min_duration=15, days_back=3, max_results=20, output_dir="./"):
+def update_news_feed(api_key, channels, min_duration=15, days_back=3, max_results=20, output_dir="./output/"):
     """Update the news feed and generate output files."""
     print(f"[{datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Updating news feed...")
+    
+    # Stelle sicher, dass output_dir kein absoluter Pfad ist
+    if output_dir.startswith('/'):
+        # Konvertiere absoluten Pfad zu relativen Pfad
+        print(f"Warnung: Absoluter Pfad '{output_dir}' erkannt. Verwende stattdessen relativen Pfad './output/'.")
+        output_dir = "./output/"
     
     aggregator = YouTubeNewsAggregator(
         api_key=api_key,
@@ -292,9 +297,14 @@ def update_news_feed(api_key, channels, min_duration=15, days_back=3, max_result
     return latest_videos
 
 def start_scheduler(api_key, channels, min_duration=15, days_back=3, max_results=20, 
-                   output_dir="./", update_time="08:00", run_once=False):
+                   output_dir="./output/", update_time="08:00", run_once=False):
     """Start the scheduler for regular updates."""
     # Ensure output directory exists
+    if output_dir.startswith('/'):
+        # Konvertiere absoluten Pfad zu relativen Pfad
+        print(f"Warnung: Absoluter Pfad '{output_dir}' erkannt. Verwende stattdessen relativen Pfad './output/'.")
+        output_dir = "./output/"
+        
     os.makedirs(output_dir, exist_ok=True)
     
     if run_once:
@@ -318,6 +328,10 @@ def start_scheduler(api_key, channels, min_duration=15, days_back=3, max_results
 
 def save_config(config, filename="config.json"):
     """Save configuration to a JSON file."""
+    # Stelle sicher, dass config kein absoluter Pfad für output_dir enthält
+    if 'output_dir' in config and config['output_dir'].startswith('/'):
+        config['output_dir'] = "./output/"
+    
     # Ensure directory exists
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     
@@ -329,7 +343,14 @@ def load_config(filename="config.json"):
     """Load configuration from a JSON file."""
     try:
         with open(filename, 'r', encoding='utf-8') as f:
-            return json.load(f)
+            config = json.load(f)
+            
+        # Stelle sicher, dass der Pfad kein absoluter Pfad ist
+        if 'output_dir' in config and config['output_dir'].startswith('/'):
+            config['output_dir'] = "./output/"
+            print(f"Warnung: Absoluter Pfad in config erkannt. Verwende stattdessen relativen Pfad './output/'.")
+            
+        return config
     except FileNotFoundError:
         return None
 
@@ -340,15 +361,20 @@ if __name__ == "__main__":
     parser.add_argument("--min-duration", type=int, default=15, help="Minimum video duration in minutes")
     parser.add_argument("--days-back", type=int, default=3, help="How many days back to search")
     parser.add_argument("--max-results", type=int, default=20, help="Maximum results per channel")
-    parser.add_argument("--output-dir", default="/Users/brunowinter/Documents/ai/news/output", help="Directory for output files")
+    parser.add_argument("--output-dir", default="./output/", help="Directory for output files")
     parser.add_argument("--update-time", default="08:00", help="Daily update time (24h format)")
     parser.add_argument("--channels", nargs="+", help="List of channel IDs or usernames")
     parser.add_argument("--now", action="store_true", help="Run update immediately")
     parser.add_argument("--save-config", help="Save configuration to file")
-    parser.add_argument("--load-config", default="/Users/brunowinter/Documents/ai/news/config/config.json", help="Load configuration from file")
+    parser.add_argument("--load-config", help="Load configuration from file")
     parser.add_argument("--schedule", action="store_true", help="Run as a scheduled service")
     
     args = parser.parse_args()
+    
+    # Überprüfe, ob output_dir ein absoluter Pfad ist
+    if args.output_dir and args.output_dir.startswith('/'):
+        print(f"Warnung: Absoluter Pfad '{args.output_dir}' wird nicht unterstützt. Verwende stattdessen relativen Pfad './output/'.")
+        args.output_dir = "./output/"
     
     # Load configuration if specified
     config = None
@@ -373,7 +399,11 @@ if __name__ == "__main__":
     min_duration = args.min_duration or (config and config.get("min_duration", 15))
     days_back = args.days_back or (config and config.get("days_back", 3))
     max_results = args.max_results or (config and config.get("max_results", 20))
-    output_dir = args.output_dir or (config and config.get("output_dir", "/Users/brunowinter/Documents/ai/news/output"))
+    # Stelle sicher, dass output_dir ein relativer Pfad ist
+    output_dir = args.output_dir or (config and config.get("output_dir", "./output/"))
+    if output_dir.startswith('/'):
+        output_dir = "./output/"
+    
     update_time = args.update_time or (config and config.get("update_time", "08:00"))
     
     # Save configuration if specified
