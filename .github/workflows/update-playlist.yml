@@ -73,5 +73,7 @@ jobs:
         run: |
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
-          git add output/latest_news.json output/latest_news.html logs/update_log.txt
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Update playlist $(date)" && git push)
+          # Force-add files that might be in .gitignore
+          git add -f output/latest_news.json output/latest_news.html logs/update_log.txt
+          # Check if there are changes to commit
+          git diff --staged --quiet || (git commit -m "Update playlist $(date)" && git push)
