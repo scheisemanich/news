@@ -1,11 +1,30 @@
 {
-    "api_key": "AIzaSyC6KF98OwdU1KrLTDBrWxm5YPa4EBo_PoY",
-    "channels": [
-      "UCupvZG-5ko_eiXAupbDfxWw"
-    ],
-    "min_duration": 15,
-    "days_back": 3,
-    "max_results": 20,
-    "output_dir": "./output/",
-    "update_time": "08:00"
+  "api_key": "AIzaSyC6KF98OwdU1KrLTDBrWxm5YPa4EBo_PoY",
+  "channels": [
+    "UCupvZG-5ko_eiXAupbDfxWw",     // CNN
+    "UCXIJgqnII2ZOINSWNOGFThA",     // Fox News
+    "UCg40OxZ1GYh3u3jBntB6DLg",     // Forbes
+    "UCMpW4tdyZUid2Ka9_FuDDhQ",     // Handelsblatt
+    "UCcPcua2PF7hzik2TeOBx3uw"      // FAZ
+  ],
+  "min_duration": 15,
+  "days_back": 1,
+  "max_results": 20,
+  "max_videos_per_channel": 5,
+  "output_dir": "./output/",
+  "update_time": "08:00",
+  "quality_keywords": [
+    "politics", "economy", "finance", "election", "government", 
+    "policy", "inflation", "stock market", "interest rates",
+    "climate", "technology", "health", "war", "conflict", "crisis",
+    "trump", "zelensky", "ukraine", "russia", "china",
+    "middle east", "israel", "gaza", "biden", "europe"
+  ],
+  "channel_criteria": {
+    "UCg40OxZ1GYh3u3jBntB6DLg": {"type": "us"},       // Forbes
+    "UCXIJgqnII2ZOINSWNOGFThA": {"type": "us"},       // Fox News
+    "UCupvZG-5ko_eiXAupbDfxWw": {"type": "us"},       // CNN
+    "UCMpW4tdyZUid2Ka9_FuDDhQ": {"type": "german"},   // Handelsblatt
+    "UCcPcua2PF7hzik2TeOBx3uw": {"type": "german"}    // FAZ
   }
+}
