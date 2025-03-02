@@ -1,4 +1,0 @@
-[2025-03-02 01:56:13] FEHLER (Code: 2) - Aktuelle Videos:        1, Hinzugefügt: 0, Entfernt: 0
-[2025-03-02 01:58:38] FEHLER (Code: 2) - Aktuelle Videos:        1, Hinzugefügt: 0, Entfernt: 0
-[2025-03-02 02:00:53] NEUE PLAYLIST ERSTELLT - Aktuelle Videos:        1, Hinzugefügt: 0, Entfernt: 0
-[2025-03-02 02:12:25] ERFOLG - Aktuelle Videos:        1, Hinzugefügt: 0, Entfernt: 0
