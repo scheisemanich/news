@@ -21,38 +21,57 @@ jobs:
           python -m pip install --upgrade pip
           pip install google-api-python-client google-auth google-auth-oauthlib google-auth-httplib2 schedule
           
-      - name: Make scripts executable
-        run: chmod +x scripts/*.sh scripts/*.py
-          
       - name: Prepare configuration files
         run: |
           mkdir -p config output logs
           echo '${{ secrets.CLIENT_SECRET }}' > config/client_secret.json
           echo '${{ secrets.TOKEN_JSON }}' > config/token.json
-          echo '${{ secrets.PLAYLIST_ID }}' > config/playlist_id.txt
+          echo "PLU5k83uIBp8F_cNiVLLC_Zqx48grLZnBm" > config/playlist_id.txt
           
-          # Create config.json
+          # Create config.json with updated parameters
           cat > config/config.json << EOL
           {
             "api_key": "${{ secrets.YOUTUBE_API_KEY }}",
-            "channels": ["UCupvZG-5ko_eiXAupbDfxWw"],
+            "channels": [
+              "UCupvZG-5ko_eiXAupbDfxWw",
+              "UCXIJgqnII2ZOINSWNOGFThA",
+              "UCg40OxZ1GYh3u3jBntB6DLg",
+              "UCMpW4tdyZUid2Ka9_FuDDhQ",
+              "UCcPcua2PF7hzik2TeOBx3uw"
+            ],
             "min_duration": 15,
-            "days_back": 2,
+            "days_back": 1,
             "max_results": 20,
+            "max_videos_per_channel": 5,
             "output_dir": "./output/",
-            "update_time": "08:00"
+            "quality_keywords": [
+              "politics", "economy", "finance", "election", "government", 
+              "policy", "inflation", "stock market", "interest rates",
+              "climate", "technology", "health", "war", "conflict", "crisis"
+            ],
+            "channel_criteria": {
+              "UCg40OxZ1GYh3u3jBntB6DLg": {"type": "us"},
+              "UCXIJgqnII2ZOINSWNOGFThA": {"type": "us"},
+              "UCupvZG-5ko_eiXAupbDfxWw": {"type": "us"},
+              "UCMpW4tdyZUid2Ka9_FuDDhQ": {"type": "german"},
+              "UCcPcua2PF7hzik2TeOBx3uw": {"type": "german"}
+            }
           }
           EOL
           
       - name: Run news aggregator
-        run: python scripts/youtube_news_aggregator.py --load-config config/config.json --days-back 2 --output-dir ./output --now
+        run: python scripts/youtube_news_aggregator.py --load-config config/config.json --days-back 1 --now
           
       - name: Update playlist
-        run: python scripts/youtube_playlist_creator.py --json-file output/latest_news.json --credentials config/client_secret.json --playlist-id $(cat config/playlist_id.txt) --title "Daily News (GitHub Action)"
-        
-      - name: Save logs
-        if: always()
+        run: python scripts/youtube_playlist_creator.py --json-file output/latest_news.json --credentials config/client_secret.json --playlist-id $(cat config/playlist_id.txt) --max-per-channel 5
+      
+      - name: Create logs
         run: |
-          mkdir -p logs
-          echo "Update completed at $(date)" > logs/github_action_log.txt
-          echo "Videos in playlist: $(grep -o '\"id\":' output/latest_news.json | wc -l)" >> logs/github_action_log.txt
+          echo "Update completed at $(date)" >> logs/update_log.txt
+          
+      - name: Commit and push if there are changes
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add output/latest_news.json output/latest_news.html logs/update_log.txt
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update playlist $(date)" && git push)
