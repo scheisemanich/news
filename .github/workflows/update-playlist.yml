@@ -1,0 +1,48 @@
+name: Update YouTube News Playlist
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Stündlich ausführen
+  workflow_dispatch:     # Ermöglicht manuelle Ausführung
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install google-api-python-client google-auth google-auth-oauthlib google-auth-httplib2
+          
+      - name: Prepare configuration files
+        run: |
+          mkdir -p config output
+          echo "${{ secrets.CLIENT_SECRET }}" > config/client_secret.json
+          echo "${{ secrets.TOKEN_JSON }}" > config/token.json
+          echo "PLU5k83uIBp8F_cNiVLLC_Zqx48grLZnBm" > config/playlist_id.txt
+          
+          # Erstelle config.json
+          cat > config/config.json << EOL
+          {
+            "api_key": "${{ secrets.YOUTUBE_API_KEY }}",
+            "channels": ["UCupvZG-5ko_eiXAupbDfxWw"],
+            "min_duration": 15,
+            "days_back": 2,
+            "max_results": 20,
+            "output_dir": "./output/",
+            "update_time": "08:00"
+          }
+          EOL
+          
+      - name: Run news aggregator
+        run: python scripts/youtube_news_aggregator.py --load-config config/config.json --days-back 2 --now
+          
+      - name: Update playlist
+        run: python scripts/youtube_playlist_creator.py --json-file output/latest_news.json --credentials config/client_secret.json --playlist-id $(cat config/playlist_id.txt)
