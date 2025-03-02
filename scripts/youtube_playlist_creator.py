@@ -2,6 +2,7 @@ import os
 import json
 import argparse
 from datetime import datetime
+from collections import defaultdict
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -208,7 +209,7 @@ class YouTubePlaylistCreator:
 
 
 def update_news_playlist(json_file, credentials_file, playlist_id=None, playlist_title=None,
-                        playlist_description=None, privacy_status="private"):
+                        playlist_description=None, privacy_status="private", max_videos_per_channel=5):
     """
     Update a YouTube playlist with the latest news videos.
     
@@ -219,6 +220,7 @@ def update_news_playlist(json_file, credentials_file, playlist_id=None, playlist
         playlist_title (str, optional): Title for a new playlist
         playlist_description (str, optional): Description for a new playlist
         privacy_status (str): Privacy status for a new playlist
+        max_videos_per_channel (int): Maximum number of videos per channel
         
     Returns:
         str: Playlist ID
@@ -260,15 +262,62 @@ def update_news_playlist(json_file, credentials_file, playlist_id=None, playlist
             print("Failed to create playlist")
             return None
     
+    # Apply channel limit (max N videos per channel)
+    # Group videos by channel
+    videos_by_channel = defaultdict(list)
+    for video in videos:
+        channel_id = video.get('channel_id')
+        if channel_id:
+            videos_by_channel[channel_id].append(video)
+        else:
+            # Fallback to channel title if ID not available
+            channel_title = video.get('channel_title')
+            if channel_title:
+                videos_by_channel[channel_title].append(video)
+            else:
+                # If both channel_id and channel_title are missing, use a default key
+                videos_by_channel['unknown'].append(video)
+    
+    # Select top videos per channel based on total_score or views if score not available
+    selected_videos = []
+    for channel, channel_videos in videos_by_channel.items():
+        # Sort videos by total_score (highest first) if available, otherwise by view_count
+        if 'total_score' in channel_videos[0]:
+            channel_videos.sort(key=lambda x: x.get('total_score', 0), reverse=True)
+        else:
+            channel_videos.sort(key=lambda x: x.get('view_count', 0), reverse=True)
+        
+        # Take top N videos from each channel
+        selected_videos.extend(channel_videos[:max_videos_per_channel])
+    
+    # Sort all selected videos by total_score or view_count
+    if selected_videos and 'total_score' in selected_videos[0]:
+        selected_videos.sort(key=lambda x: x.get('total_score', 0), reverse=True)
+    else:
+        selected_videos.sort(key=lambda x: x.get('view_count', 0), reverse=True)
+    
     # Add videos to playlist
     successful_adds = 0
-    for video in videos:
+    for video in selected_videos:
         video_id = video['id']
         success = creator.add_video_to_playlist(playlist_id, video_id)
         if success:
             successful_adds += 1
+            score_info = f" (Score: {video.get('total_score', 'N/A')})" if 'total_score' in video else ""
+            print(f"Added video: {video.get('title', video_id)}{score_info}")
     
-    print(f"Added {successful_adds} of {len(videos)} videos to playlist")
+    print(f"Added {successful_adds} of {len(selected_videos)} videos to playlist")
+    print(f"Applied channel limit: maximum {max_videos_per_channel} videos per channel")
+    
+    # Count videos per channel for reporting
+    channels_count = defaultdict(int)
+    for video in selected_videos:
+        channel = video.get('channel_title', 'Unknown')
+        channels_count[channel] += 1
+    
+    print("\nVideos per channel:")
+    for channel, count in channels_count.items():
+        print(f"- {channel}: {count}")
     
     # Get and display playlist stats
     stats = creator.get_playlist_stats(playlist_id)
@@ -292,6 +341,8 @@ if __name__ == "__main__":
     parser.add_argument("--description", help="Description for a new playlist")
     parser.add_argument("--privacy", default="private", choices=["public", "private", "unlisted"], 
                         help="Privacy status for the playlist")
+    parser.add_argument("--max-per-channel", type=int, default=5,
+                        help="Maximum number of videos per channel (default: 5)")
     
     args = parser.parse_args()
     
@@ -301,5 +352,6 @@ if __name__ == "__main__":
         playlist_id=args.playlist_id,
         playlist_title=args.title,
         playlist_description=args.description,
-        privacy_status=args.privacy
+        privacy_status=args.privacy,
+        max_videos_per_channel=args.max_per_channel
     )
