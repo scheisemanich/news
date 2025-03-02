@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Pfad zum Projektverzeichnis
-PROJECT_DIR="/Users/brunowinter/Documents/ai/news"
+PROJECT_DIR="/Users/brunowinter/Documents/news"
 # Pfad zur Konfigurationsdatei
 CONFIG_FILE="$PROJECT_DIR/config/config.json"
 # Pfad zur JSON-Ausgabedatei
