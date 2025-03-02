@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Pfad zum Projektverzeichnis - bei GitHub Actions ist das das aktuelle Verzeichnis
+# Pfad zum Projektverzeichnis
 PROJECT_DIR="."
 # Pfad zur Konfigurationsdatei
 CONFIG_FILE="$PROJECT_DIR/config/config.json"
