@@ -60,7 +60,7 @@ jobs:
           EOL
           
       - name: Run news aggregator
-        run: python scripts/youtube_news_aggregator.py --load-config config/config.json --days-back 1 --now
+        run: python scripts/youtube_news_aggregator.py --json-file output/latest_news.json --credentials config/client_secret.json
           
       - name: Update playlist
         run: python scripts/youtube_playlist_creator.py --json-file output/latest_news.json --credentials config/client_secret.json --playlist-id $(cat config/playlist_id.txt) --max-per-channel 5
