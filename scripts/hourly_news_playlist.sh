@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Pfad zum Projektverzeichnis
-PROJECT_DIR="/Users/brunowinter/Documents/ai/news"
+# Pfad zum Projektverzeichnis - bei GitHub Actions ist das das aktuelle Verzeichnis
+PROJECT_DIR="."
 # Pfad zur Konfigurationsdatei
 CONFIG_FILE="$PROJECT_DIR/config/config.json"
 # Pfad zur JSON-Ausgabedatei
@@ -19,8 +19,8 @@ SUMMARY_LOG="$PROJECT_DIR/logs/update_summary.txt"
 # Datum und Uhrzeit für Log-Ausgabe
 TIMESTAMP=$(date "+%Y-%m-%d %H:%M:%S")
 
-# Wechsle ins Projektverzeichnis
-cd "$PROJECT_DIR" || { echo "Fehler: Verzeichnis nicht gefunden" >> "$LOG_FILE"; exit 1; }
+# Stelle sicher, dass die Verzeichnisse existieren
+mkdir -p "$PROJECT_DIR/config" "$PROJECT_DIR/output" "$PROJECT_DIR/logs"
 
 # Führe eine Sicherung der vorherigen JSON-Datei durch, falls vorhanden
 PREVIOUS_VIDEOS=0
@@ -37,14 +37,10 @@ echo "--------------------------------" >> "$LOG_FILE"
 echo "Starte Update am $TIMESTAMP" >> "$LOG_FILE"
 echo "--------------------------------" >> "$LOG_FILE"
 
-# Aktiviere die Python-Umgebung, falls vorhanden
-# Entferne die Kommentarzeichen, wenn du eine virtuelle Umgebung verwendest
-# source venv/bin/activate
-
 # Aktualisiere die News-Feeds
 # Wichtig: Hier setzen wir --days-back=2 für 48 Stunden
 echo "Sammle aktuelle News-Videos der letzten 48 Stunden..." >> "$LOG_FILE"
-python scripts/youtube_news_aggregator.py --load-config "$CONFIG_FILE" --days-back 2 --now >> "$LOG_FILE" 2>&1
+python "$PROJECT_DIR/scripts/youtube_news_aggregator.py" --load-config "$CONFIG_FILE" --days-back 2 --now --output-dir "$PROJECT_DIR/output/" >> "$LOG_FILE" 2>&1
 
 # Prüfe, ob die JSON-Datei erstellt wurde
 if [ ! -f "$JSON_FILE" ]; then
@@ -89,9 +85,6 @@ if [ "$ADDED_COUNT" -gt 0 ]; then
     done
 fi
 
-# Warte kurz, um sicherzustellen, dass die JSON-Datei vollständig geschrieben wurde
-sleep 5
-
 # Aktualisiere die YouTube-Playlist
 echo "Aktualisiere YouTube-Playlist..." >> "$LOG_FILE"
 
@@ -100,7 +93,7 @@ if [ -f "$PLAYLIST_ID_FILE" ]; then
     # Lese die Playlist-ID aus der Datei
     PLAYLIST_ID=$(cat "$PLAYLIST_ID_FILE")
     echo "Aktualisiere bestehende Playlist ($PLAYLIST_ID)..." >> "$LOG_FILE"
-    python scripts/youtube_playlist_creator.py --json-file "$JSON_FILE" --credentials "$CREDENTIALS_FILE" --playlist-id "$PLAYLIST_ID" >> "$LOG_FILE" 2>&1
+    python "$PROJECT_DIR/scripts/youtube_playlist_creator.py" --json-file "$JSON_FILE" --credentials "$CREDENTIALS_FILE" --playlist-id "$PLAYLIST_ID" >> "$LOG_FILE" 2>&1
     UPDATE_STATUS=$?
     
     # Prüfe, ob das Update erfolgreich war
@@ -112,14 +105,13 @@ if [ -f "$PLAYLIST_ID_FILE" ]; then
 else
     # Erstelle eine neue Playlist und speichere die ID
     echo "Erstelle neue Playlist..." >> "$LOG_FILE"
-    OUTPUT=$(python scripts/youtube_playlist_creator.py --json-file "$JSON_FILE" --credentials "$CREDENTIALS_FILE" --title "Meine News (48h)" --privacy "private")
+    OUTPUT=$(python "$PROJECT_DIR/scripts/youtube_playlist_creator.py" --json-file "$JSON_FILE" --credentials "$CREDENTIALS_FILE" --title "Meine News (48h)" --privacy "private")
     UPDATE_STATUS=$?
     
     if [ $UPDATE_STATUS -eq 0 ]; then
         UPDATE_MSG="NEUE PLAYLIST ERSTELLT"
         
         # Extrahiere die Playlist-ID aus der Ausgabe
-        # Suche nach Zeilen wie "Created playlist: Meine News (ID: PL1234567890ABCDEF)"
         PLAYLIST_ID=$(echo "$OUTPUT" | grep "Created playlist:" | sed -E 's/.*\(ID: ([^)]+)\).*/\1/')
         
         if [ -n "$PLAYLIST_ID" ]; then
