@@ -26,7 +26,14 @@ jobs:
           mkdir -p config output logs
           echo '${{ secrets.CLIENT_SECRET }}' > config/client_secret.json
           echo '${{ secrets.TOKEN_JSON }}' > config/token.json
-          echo "PLU5k83uIBp8F_cNiVLLC_Zqx48grLZnBm" > config/playlist_id.txt
+          
+          # Check if playlist ID exists and create playlist.txt if it doesn't exist
+          if [ ! -f "config/playlist_id.txt" ] || [ ! -s "config/playlist_id.txt" ]; then
+            echo "Playlist ID file not found or empty, will create new playlist."
+            echo "" > config/playlist_id.txt
+          else
+            echo "Using existing playlist ID from file."
+          fi
           
           # Create config.json with updated parameters
           cat > config/config.json << EOL
@@ -61,9 +68,47 @@ jobs:
           
       - name: Run news aggregator
         run: python scripts/youtube_news_aggregator.py --json-file output/latest_news.json --credentials config/client_secret.json
+      
+      - name: Check existing playlist ID
+        id: check-playlist
+        run: |
+          # Check if playlist_id.txt exists and is not empty
+          if [ -f "config/playlist_id.txt" ] && [ -s "config/playlist_id.txt" ]; then
+            PLAYLIST_ID=$(cat config/playlist_id.txt)
+            echo "Playlist ID: $PLAYLIST_ID"
+            echo "playlist_exists=true" >> $GITHUB_OUTPUT
+            echo "playlist_id=$PLAYLIST_ID" >> $GITHUB_OUTPUT
+          else
+            echo "No playlist ID found, will create a new playlist."
+            echo "playlist_exists=false" >> $GITHUB_OUTPUT
+          fi
           
-      - name: Update playlist
-        run: python scripts/youtube_playlist_creator.py --json-file output/latest_news.json --credentials config/client_secret.json --playlist-id $(cat config/playlist_id.txt) --max-per-channel 5
+      - name: Create new playlist
+        if: steps.check-playlist.outputs.playlist_exists != 'true'
+        id: create-playlist
+        run: |
+          echo "Creating new playlist..."
+          # Create a new playlist with title including date
+          OUTPUT=$(python scripts/youtube_playlist_creator.py --json-file output/latest_news.json --credentials config/client_secret.json --title "Daily News Feed (Updated Hourly)" --description "Automatically updated news feed from top sources" --privacy "private" --max-per-channel 5)
+          
+          # Extract playlist ID from the output
+          PLAYLIST_ID=$(echo "$OUTPUT" | grep -o "ID: [A-Za-z0-9_-]\+" | sed 's/ID: //')
+          
+          if [ -n "$PLAYLIST_ID" ]; then
+            echo "New playlist created with ID: $PLAYLIST_ID"
+            echo "$PLAYLIST_ID" > config/playlist_id.txt
+            echo "playlist_id=$PLAYLIST_ID" >> $GITHUB_OUTPUT
+          else
+            echo "Failed to extract playlist ID from output."
+            echo "$OUTPUT"
+            exit 1
+          fi
+          
+      - name: Update existing playlist
+        if: steps.check-playlist.outputs.playlist_exists == 'true'
+        run: |
+          echo "Updating existing playlist..."
+          python scripts/youtube_playlist_creator.py --json-file output/latest_news.json --credentials config/client_secret.json --playlist-id $(cat config/playlist_id.txt) --max-per-channel 5
       
       - name: Create logs
         run: |
@@ -73,7 +118,9 @@ jobs:
         run: |
           git config --global user.name 'GitHub Action'
           git config --global user.email 'action@github.com'
+          
           # Force-add files that might be in .gitignore
-          git add -f output/latest_news.json output/latest_news.html logs/update_log.txt
+          git add -f output/latest_news.json output/latest_news.html logs/update_log.txt config/playlist_id.txt
+          
           # Check if there are changes to commit
           git diff --staged --quiet || (git commit -m "Update playlist $(date)" && git push)
