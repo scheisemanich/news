@@ -1,0 +1,23 @@
+# macOS system files
+.DS_Store
+**/.DS_Store
+
+# Python files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+.env/
+
+# Configuration files with sensitive information
+config/token.json
+config/client_secret.json
+
+# Log files
+*.log
+
+# Output directories
+output/
+logs/
