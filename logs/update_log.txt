@@ -1,0 +1,74 @@
+--------------------------------
+Starte Update am 2025-03-02 01:56:13
+--------------------------------
+Sammle aktuelle News-Videos der letzten 48 Stunden...
+/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python: can't open file '/Users/brunowinter/Documents/ai/news/youtube_news_aggregator.py': [Errno 2] No such file or directory
+Aktuelle Anzahl Videos:        1
+Hinzugefügte Videos: 0
+Entfernte Videos: 0
+Aktualisiere YouTube-Playlist...
+Aktualisiere bestehende Playlist (PLU5k83uIBp8HvloSwAy8M8oY7-iDfT8f5)...
+/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python: can't open file '/Users/brunowinter/Documents/ai/news/youtube_playlist_creator.py': [Errno 2] No such file or directory
+--------------------------------
+Update abgeschlossen am 2025-03-02 01:56:18
+--------------------------------
+--------------------------------
+Starte Update am 2025-03-02 01:58:38
+--------------------------------
+Sammle aktuelle News-Videos der letzten 48 Stunden...
+/opt/homebrew/Cellar/python@3.13/3.13.2/Frameworks/Python.framework/Versions/3.13/Resources/Python.app/Contents/MacOS/Python: can't open file '/Users/brunowinter/Documents/ai/news/youtube_news_aggregator.py': [Errno 2] No such file or directory
+Aktuelle Anzahl Videos:        1
+Hinzugefügte Videos: 0
+Entfernte Videos: 0
+Aktualisiere YouTube-Playlist...
+Erstelle neue Playlist...
+--------------------------------
+Update abgeschlossen am 2025-03-02 01:58:43
+--------------------------------
+--------------------------------
+Starte Update am 2025-03-02 02:00:53
+--------------------------------
+Sammle aktuelle News-Videos der letzten 48 Stunden...
+Loaded configuration from /Users/brunowinter/Documents/ai/news/config/config.json
+[2025-03-02 02:00:53] Updating news feed...
+Exported 1 videos to /Users/brunowinter/Documents/ai/news/output/latest_news.json
+Exported 1 videos to /Users/brunowinter/Documents/ai/news/output/latest_news.html
+[2025-03-02 02:00:54] Found 1 news videos matching your criteria.
+Output saved to /Users/brunowinter/Documents/ai/news/output/latest_news.html and /Users/brunowinter/Documents/ai/news/output/latest_news.json
+Aktuelle Anzahl Videos:        1
+Hinzugefügte Videos: 0
+Entfernte Videos: 0
+Aktualisiere YouTube-Playlist...
+Erstelle neue Playlist...
+Neue Playlist-ID: PLU5k83uIBp8F_cNiVLLC_Zqx48grLZnBm
+Playlist-ID wurde gespeichert in: /Users/brunowinter/Documents/ai/news/config/playlist_id.txt
+--------------------------------
+Update abgeschlossen am 2025-03-02 02:01:01
+--------------------------------
+--------------------------------
+Starte Update am 2025-03-02 02:12:25
+--------------------------------
+Sammle aktuelle News-Videos der letzten 48 Stunden...
+Loaded configuration from /Users/brunowinter/Documents/ai/news/config/config.json
+[2025-03-02 02:12:25] Updating news feed...
+Exported 1 videos to /Users/brunowinter/Documents/ai/news/output/latest_news.json
+Exported 1 videos to /Users/brunowinter/Documents/ai/news/output/latest_news.html
+[2025-03-02 02:12:26] Found 1 news videos matching your criteria.
+Output saved to /Users/brunowinter/Documents/ai/news/output/latest_news.html and /Users/brunowinter/Documents/ai/news/output/latest_news.json
+Aktuelle Anzahl Videos:        1
+Hinzugefügte Videos: 0
+Entfernte Videos: 0
+Aktualisiere YouTube-Playlist...
+Aktualisiere bestehende Playlist (PLU5k83uIBp8F_cNiVLLC_Zqx48grLZnBm)...
+Cleared all videos from playlist PLU5k83uIBp8F_cNiVLLC_Zqx48grLZnBm
+Added 1 of 1 videos to playlist
+
+Playlist Information:
+Title: Meine News (48h)
+URL: https://www.youtube.com/playlist?list=PLU5k83uIBp8F_cNiVLLC_Zqx48grLZnBm
+Total videos: 1
+
+You can now view this playlist in your YouTube app!
+--------------------------------
+Update abgeschlossen am 2025-03-02 02:12:34
+--------------------------------

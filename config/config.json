@@ -1,0 +1,11 @@
+{
+    "api_key": "AIzaSyC6KF98OwdU1KrLTDBrWxm5YPa4EBo_PoY",
+    "channels": [
+      "UCupvZG-5ko_eiXAupbDfxWw"
+    ],
+    "min_duration": 15,
+    "days_back": 3,
+    "max_results": 20,
+    "output_dir": "./output/",
+    "update_time": "08:00"
+  }
