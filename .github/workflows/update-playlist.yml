@@ -9,12 +9,12 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: '3.10'  # Verwende eine aktuellere Version
           
       - name: Install dependencies
         run: |
@@ -24,8 +24,8 @@ jobs:
       - name: Prepare configuration files
         run: |
           mkdir -p config output
-          echo "${{ secrets.CLIENT_SECRET }}" > config/client_secret.json
-          echo "${{ secrets.TOKEN_JSON }}" > config/token.json
+          echo '${{ secrets.CLIENT_SECRET }}' > config/client_secret.json
+          echo '${{ secrets.TOKEN_JSON }}' > config/token.json
           echo "PLU5k83uIBp8F_cNiVLLC_Zqx48grLZnBm" > config/playlist_id.txt
           
           # Erstelle config.json
