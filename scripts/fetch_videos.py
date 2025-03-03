@@ -550,11 +550,7 @@ def run_news_aggregator(config, output_dir="output/"):
     
     print(f"Results saved to {json_file}")
     
-    # Save a backup of the previous JSON file
-    previous_file = os.path.join(output_dir, "previous_news.json")
-    if os.path.exists(json_file) and not os.path.exists(previous_file):
-        import shutil
-        shutil.copy(json_file, previous_file)
+    # Removed backup code that created previous_news.json
     
     return filtered_videos
 
