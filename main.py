@@ -81,8 +81,8 @@ def main():
         try:
             # Run the fetch-videos.py script
             print("Running fetch-videos.py...")
-            subprocess.run([sys.executable, "scripts/fetch-videos.py", 
-                           "--load-config", "output/temp_config.json"], check=True)
+            subprocess.run([sys.executable, "scripts/fetch_videos.py", 
+               "--load-config", "output/temp_config.json"], check=True)
         except subprocess.CalledProcessError as e:
             print(f"Error running fetch-videos.py: {e}")
             sys.exit(1)
