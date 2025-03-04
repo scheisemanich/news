@@ -4,4 +4,4 @@ config/api_key.txt
 config/service-account.json
 .DS_Store
 **/.DS_Store
-output/
+
