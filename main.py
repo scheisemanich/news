@@ -79,12 +79,12 @@ def main():
             json.dump(config, f, indent=2)
         
         try:
-            # Run the fetch-videos.py script
-            print("Running fetch-videos.py...")
+            # Run the fetch_videos.py script
+            print("Running fetch_videos.py...")
             subprocess.run([sys.executable, "scripts/fetch_videos.py", 
-               "--load-config", "output/temp_config.json"], check=True)
+                           "--load-config", "output/temp_config.json"], check=True)
         except subprocess.CalledProcessError as e:
-            print(f"Error running fetch-videos.py: {e}")
+            print(f"Error running fetch_videos.py: {e}")
             sys.exit(1)
         finally:
             # Clean up temporary config file
@@ -102,12 +102,12 @@ def main():
             sys.exit(1)
         
         try:
-            # Run the update-news-playlist.py script
-            print("Running update-news-playlist.py...")
-            subprocess.run([sys.executable, "scripts/update-news-playlist.py", 
+            # Run the update_news_playlist.py script
+            print("Running update_news_playlist.py...")
+            subprocess.run([sys.executable, "scripts/update_news_playlist.py", 
                            "--json-file", "output/latest_news.json"], check=True)
         except subprocess.CalledProcessError as e:
-            print(f"Error running update-news-playlist.py: {e}")
+            print(f"Error running update_news_playlist.py: {e}")
             sys.exit(1)
     else:
         print("\n[STEP 2/2] Skipping playlist update step...")
