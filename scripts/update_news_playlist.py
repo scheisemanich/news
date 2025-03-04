@@ -15,21 +15,20 @@ import os
 import json
 import argparse
 from datetime import datetime
-from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google.oauth2.credentials import Credentials
+
+# Import service account authentication
+from service_account_auth import get_youtube_client
 
 def update_news_playlist(json_file="output/latest_news.json", 
-                         credentials_file="config/client_secret.json",
-                         token_file="config/token.json", 
+                         service_account_file="config/service-account.json",
                          playlist_id_file="config/playlist_id.txt"):
     """
     Aktualisiert eine bestehende YouTube-Playlist mit den neuesten Nachrichtenvideos.
     
     Args:
         json_file (str): Pfad zur JSON-Datei mit den Videoinformationen
-        credentials_file (str): Pfad zur OAuth 2.0 Client-Credentials-Datei
-        token_file (str): Pfad zur Token-Datei
+        service_account_file (str): Pfad zur Service Account JSON-Datei
         playlist_id_file (str): Pfad zur Datei mit der Playlist-ID
     
     Returns:
@@ -65,22 +64,9 @@ def update_news_playlist(json_file="output/latest_news.json",
         print(f"Fehler beim Laden der JSON-Datei: {e}")
         return False
     
-    # 3. Nach YouTube API authentifizieren
+    # 3. Mit Service Account bei YouTube API authentifizieren
     try:
-        if not os.path.exists(token_file):
-            print(f"Fehler: Token-Datei {token_file} nicht gefunden.")
-            return False
-            
-        with open(token_file, 'r') as f:
-            token_data = json.load(f)
-            
-        creds = Credentials.from_authorized_user_info(token_data)
-        
-        if not creds or not creds.valid:
-            print("Fehler: Ungültige oder abgelaufene Anmeldedaten.")
-            return False
-            
-        youtube = build('youtube', 'v3', credentials=creds)
+        youtube = get_youtube_client(service_account_file)
         print("Erfolgreich bei YouTube API authentifiziert.")
     except Exception as e:
         print(f"Fehler bei der Authentifizierung: {e}")
@@ -191,10 +177,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="YouTube News Playlist Updater")
     parser.add_argument("--json-file", default="output/latest_news.json", 
                        help="Pfad zur JSON-Datei mit den Videos")
-    parser.add_argument("--credentials", default="config/client_secret.json", 
-                       help="Pfad zur OAuth 2.0 Client-Credentials-Datei")
-    parser.add_argument("--token", default="config/token.json",
-                       help="Pfad zur Token-Datei")
+    parser.add_argument("--service-account", default="config/service-account.json", 
+                       help="Pfad zur Service Account JSON-Datei")
     parser.add_argument("--playlist-id-file", default="config/playlist_id.txt",
                        help="Pfad zur Datei mit der Playlist-ID")
     parser.add_argument("--verbose", action="store_true",
@@ -204,8 +188,7 @@ if __name__ == "__main__":
     
     success = update_news_playlist(
         json_file=args.json_file,
-        credentials_file=args.credentials,
-        token_file=args.token,
+        service_account_file=args.service_account,
         playlist_id_file=args.playlist_id_file
     )
     

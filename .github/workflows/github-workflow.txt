@@ -27,10 +27,8 @@ jobs:
           
       - name: Set up YouTube API credentials
         run: |
-          echo "${{ secrets.YOUTUBE_API_KEY }}" > config/api_key.txt
           echo "${{ secrets.YOUTUBE_PLAYLIST_ID }}" > config/playlist_id.txt
-          echo '${{ secrets.YOUTUBE_CLIENT_SECRET }}' > config/client_secret.json
-          echo '${{ secrets.YOUTUBE_TOKEN }}' > config/token.json
+          echo '${{ secrets.YOUTUBE_SERVICE_ACCOUNT }}' > config/service-account.json
           
       - name: Create output directory
         run: mkdir -p output
@@ -42,6 +40,6 @@ jobs:
         run: |
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
-          git add output/latest_news.json
+          git add output/latest_news.json output/previous_news.json
           git commit -m "Update news playlist $(date +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
           git push

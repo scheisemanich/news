@@ -19,32 +19,29 @@ import sys
 import subprocess
 import time
 
-def read_api_key(filepath="config/api_key.txt"):
-    """Read the YouTube API key from file."""
-    try:
-        with open(filepath, 'r') as f:
-            return f.read().strip()
-    except FileNotFoundError:
-        print(f"Error: API key file not found at {filepath}")
-        sys.exit(1)
-
 def main():
     parser = argparse.ArgumentParser(description="Run YouTube News Aggregator Pipeline")
     parser.add_argument("--skip-fetch", action="store_true", help="Skip the fetch videos step")
     parser.add_argument("--skip-update", action="store_true", help="Skip the playlist update step")
+    parser.add_argument("--service-account", default="config/service-account.json", 
+                        help="Path to service account JSON key file")
     args = parser.parse_args()
     
     print("=" * 50)
     print("STARTING YOUTUBE NEWS AGGREGATOR PIPELINE")
     print("=" * 50)
     
+    # Check for service account file
+    if not os.path.exists(args.service_account):
+        print(f"Error: Service account file not found at {args.service_account}")
+        sys.exit(1)
+        
     # Ensure output directory exists
     os.makedirs("output", exist_ok=True)
     
     # Step 1: Fetch and score videos
     if not args.skip_fetch:
         print("\n[STEP 1/2] Fetching and scoring videos...")
-        api_key = read_api_key()
         
         # Define channels to fetch from
         channels = [
@@ -65,7 +62,7 @@ def main():
         
         # Create config dictionary
         config = {
-            "api_key": api_key,
+            "service_account_file": args.service_account,
             "channels": channels,
             "days_back": 1,
             "max_results": 20,
@@ -105,7 +102,8 @@ def main():
             # Run the update_news_playlist.py script
             print("Running update_news_playlist.py...")
             subprocess.run([sys.executable, "scripts/update_news_playlist.py", 
-                           "--json-file", "output/latest_news.json"], check=True)
+                           "--json-file", "output/latest_news.json",
+                           "--service-account", args.service_account], check=True)
         except subprocess.CalledProcessError as e:
             print(f"Error running update_news_playlist.py: {e}")
             sys.exit(1)

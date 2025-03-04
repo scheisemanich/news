@@ -9,14 +9,11 @@ import json
 import argparse
 from datetime import datetime, timedelta
 import time
-from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 
 # Import the VideoScoreCalculator directly
 from score_calculator import VideoScoreCalculator, apply_scores_to_videos
+from service_account_auth import get_youtube_client
 
 def is_faz_fruehdenker(video_info):
     """
@@ -124,64 +121,22 @@ def is_faz_podcast(video_info):
     
     return has_interview_format or has_expert_format or podcast_format
 
-# Define the scopes required for the YouTube Data API
-SCOPES = [
-    'https://www.googleapis.com/auth/youtube.readonly'
-]
-
 class YouTubeNewsAggregator:
-    def __init__(self, api_key=None, credentials_file=None, token_file=None):
+    def __init__(self, service_account_file=None):
         """
         Initialize the YouTube News Aggregator.
         
         Args:
-            api_key (str, optional): YouTube Data API key
-            credentials_file (str, optional): Path to the OAuth 2.0 client credentials file
-            token_file (str, optional): Path to save the authorization token
+            service_account_file (str, optional): Path to the service account JSON key file
         """
-        self.api_key = api_key
-        self.credentials_file = credentials_file
-        self.token_file = token_file
+        self.service_account_file = service_account_file
         self.youtube = None
         
-        # Connect to YouTube API
-        if api_key:
-            self.youtube = build('youtube', 'v3', developerKey=api_key)
-        elif credentials_file and token_file:
-            self.youtube = self._authenticate_oauth()
+        # Connect to YouTube API with service account
+        if service_account_file:
+            self.youtube = get_youtube_client(service_account_file)
         else:
-            raise ValueError("Either API key or OAuth credentials must be provided")
-    
-    def _authenticate_oauth(self):
-        """Authenticate with YouTube API using OAuth 2.0."""
-        creds = None
-        
-        # Load existing token if available
-        if os.path.exists(self.token_file):
-            try:
-                creds = Credentials.from_authorized_user_info(
-                    json.loads(open(self.token_file, 'r').read()),
-                    SCOPES
-                )
-            except Exception as e:
-                print(f"Error loading token: {e}")
-        
-        # If credentials don't exist or are invalid, get new ones
-        if not creds or not creds.valid:
-            if creds and creds.expired and creds.refresh_token:
-                creds.refresh(Request())
-            else:
-                flow = InstalledAppFlow.from_client_secrets_file(
-                    self.credentials_file, SCOPES
-                )
-                creds = flow.run_local_server(port=0)
-            
-            # Save credentials for future use
-            with open(self.token_file, 'w') as token:
-                token.write(creds.to_json())
-        
-        # Build YouTube API client
-        return build('youtube', 'v3', credentials=creds)
+            raise ValueError("Service account file must be provided")
     
     def get_channel_uploads_playlist(self, channel_id):
         """
@@ -446,14 +401,14 @@ def run_news_aggregator(config, output_dir="output/"):
         output_dir (str, optional): Output directory for results
     """
     # Extract configuration parameters
-    api_key = config.get("api_key")
+    service_account_file = config.get("service_account_file")
     channels = config.get("channels", [])
     days_back = config.get("days_back", 1)
     max_results = config.get("max_results", 20)
     quality_keywords = config.get("quality_keywords", [])
     
     # Initialize the aggregator
-    aggregator = YouTubeNewsAggregator(api_key=api_key)
+    aggregator = YouTubeNewsAggregator(service_account_file=service_account_file)
     
     # Get news videos
     print(f"Collecting videos from {len(channels)} channels...")
@@ -550,7 +505,11 @@ def run_news_aggregator(config, output_dir="output/"):
     
     print(f"Results saved to {json_file}")
     
-    # Removed backup code that created previous_news.json
+    # Save a backup of the previous JSON file
+    previous_file = os.path.join(output_dir, "previous_news.json")
+    if os.path.exists(json_file) and not os.path.exists(previous_file):
+        import shutil
+        shutil.copy(json_file, previous_file)
     
     return filtered_videos
 
@@ -558,15 +517,13 @@ def run_news_aggregator(config, output_dir="output/"):
 def main():
     parser = argparse.ArgumentParser(description="YouTube News Aggregator")
     parser.add_argument("--load-config", help="Path to the configuration file")
-    parser.add_argument("--api-key", help="YouTube Data API key")
+    parser.add_argument("--service-account", help="Path to the service account JSON key file")
     parser.add_argument("--channels", nargs="+", help="YouTube channel IDs")
     parser.add_argument("--days-back", type=int, default=1, help="Number of days to look back")
     parser.add_argument("--max-results", type=int, default=20, help="Maximum results per channel")
     parser.add_argument("--output-dir", default="output/", help="Output directory")
     parser.add_argument("--max-videos-per-channel", type=int, default=5, help="Maximum videos per channel")
     parser.add_argument("--json-file", help="Output JSON file path")
-    parser.add_argument("--credentials", help="Path to OAuth credentials file")
-    parser.add_argument("--now", action="store_true", help="Use current time instead of specified update time")
     
     args = parser.parse_args()
     
@@ -581,8 +538,8 @@ def main():
             return
     
     # Override configuration with command line arguments
-    if args.api_key:
-        config["api_key"] = args.api_key
+    if args.service_account:
+        config["service_account_file"] = args.service_account
     if args.channels:
         config["channels"] = args.channels
     if args.days_back:
@@ -593,8 +550,8 @@ def main():
         config["max_videos_per_channel"] = args.max_videos_per_channel
     
     # Validate configuration
-    if not config.get("api_key"):
-        print("Error: YouTube API key is required")
+    if not config.get("service_account_file"):
+        print("Error: Service account file path is required")
         return
     
     if not config.get("channels"):
